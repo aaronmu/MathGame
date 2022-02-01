@@ -34,15 +34,13 @@ let generateSubUpto x =
     let right = generateNumberBetween 1 left
     SUB (left, right)
 
-let shuffle x = Seq.sortBy (fun _ -> rnd.Next()) x
-
 let generateExprsUpto x =
     seq {
-        for _ in 0 .. 9 do
+        while true do
           yield generateSubUpto x
           yield generateSumUpto x  
     }
-    |> shuffle
+    |> Seq.distinct
     |> Seq.truncate 11
 
 type StartedState =
