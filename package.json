@@ -4,7 +4,7 @@
         "install": "dotnet tool restore",
         "build": "dotnet fable src -o build/client --run vite build",
         "start": "dotnet fable watch src -s -o build/client --run vite",
-        "publish": "npm run build -- --base=/Lit.TodoMVC/ && npx gh-pages -d dist"
+        "publish": "npm run build -- --base=/MathGame/ && npx gh-pages -d dist"
     },
     "dependencies": {
         "lit": "^2.0.0"
