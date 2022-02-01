@@ -25,13 +25,13 @@ let generateNumberBetween x y =
     rnd.Next (x, y)    
 
 let generateSumUpto x =
-    let left = generateNumberBetween 0 x
-    let right = generateNumberBetween 0 (x - left)
+    let left = generateNumberBetween 1 x
+    let right = generateNumberBetween 1 (x - left)
     SUM (left, right)
 
 let generateSubUpto x =
-    let left = generateNumberBetween 0 x
-    let right = generateNumberBetween 0 left
+    let left = generateNumberBetween 1 x
+    let right = generateNumberBetween 1 left
     SUB (left, right)
 
 let shuffle x = Seq.sortBy (fun _ -> rnd.Next()) x
@@ -43,7 +43,7 @@ let generateExprsUpto x =
           yield generateSumUpto x  
     }
     |> shuffle
-    |> Seq.take 10
+    |> Seq.truncate 11
 
 type StartedState =
     { Solved: SolvedExpr list
