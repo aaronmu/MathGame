@@ -8,15 +8,18 @@ Fable.Core.JsInterop.importSideEffects "./index.css"
 type Expr =
     | SUM of left:int * right: int
     | SUB of left:int * right: int
+    
+    member this.Solve () =
+        match this with
+        | SUM (left, right) -> left + right
+        | SUB (left, right) -> left - right
 
 type SolvedExpr =
     { Expr: Expr
       Solution: int }
     
     member this.IsCorrect () =
-        match this.Expr with
-        | SUM (left, right) -> left + right = this.Solution
-        | SUB (left, right) -> left - right = this.Solution
+        this.Expr.Solve () = this.Solution
 
 let rnd =
     Random()
@@ -87,14 +90,24 @@ let MatchComponent() =
                       | Expr.SUB (left, right) -> left, "-", right
                       | Expr.SUM (left, right) -> left, "+", right
                   
-                  let correct =
+                  let prefix =
                       if solvedExpr.IsCorrect () then
                           "🟩"
                       else
-                          "🟥" 
+                          "🟥"
+                  
+                  let solution =
+                      if solvedExpr.IsCorrect () then
+                          html $"""<span>{solvedExpr.Solution}</span>"""
+                      else
+                          html $"""
+                            <span style="color:red;text-decoration:line-through" class="font-bold">
+                                <span style="color:black">&nbsp;{solvedExpr.Solution}</span>
+                            </span>
+                            <span style="color:red;">&nbsp;{solvedExpr.Expr.Solve()}</span>"""
                    
                     
-                  html $"""<li class="font-mono text-xl">{correct} {left} {operand} {right} = {solvedExpr.Solution}""" ]
+                  html $"""<li class="font-mono text-xl">{prefix} {left} {operand} {right} = {solution}""" ]
         
         html $"""<ul>{lis}</ul>"""
     
