@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="App.fs" />
+    <Content Include="index.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Fable.Lit" Version="1.4.1" />
+    <PackageReference Include="Fable.Lit.Elmish" Version="1.4.0" />
+    <PackageReference Include="Thoth.Json" Version="6.0.0" />
+  </ItemGroup>
+</Project>

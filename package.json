@@ -1,0 +1,18 @@
+{
+    "private": true,
+    "scripts": {
+        "install": "dotnet tool restore",
+        "build": "dotnet fable src -o build/client --run vite build",
+        "start": "dotnet fable watch src -s -o build/client --run vite",
+        "publish": "npm run build -- --base=/Lit.TodoMVC/ && npx gh-pages -d dist"
+    },
+    "dependencies": {
+        "lit": "^2.0.0"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.2",
+        "postcss": "^8.4.6",
+        "tailwindcss": "^3.0.18",
+        "vite": "^2.6.1"
+    }
+}

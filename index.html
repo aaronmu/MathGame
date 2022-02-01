@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>Lit.TodoMVC</title>
+	<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" href="fable.ico" />
+
+    <!-- Used to hide custom components until they are defined and prevent a flash of unstyled content -->
+    <style>
+        *:not(:defined) { display:none }
+        html, body {
+            overflow-y: hidden;
+            height: 100%;
+        }
+     </style>
+</head>
+
+<body>
+    <math-app></math-app>
+    <script type="module" src="./build/client/App.js"></script>
+</body>
+
+</html>
