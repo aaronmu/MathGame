@@ -60,7 +60,7 @@ let generateQuestions () =
     
     let sums =
         ``sums up to`` 20
-        |> List.filter (fun sum -> sum.Solve() > 10 && sum.LeftOperand <> 0 && sum.RightOperand <> 0)
+        |> List.filter (fun sum -> sum.Solve() > 10 && sum.Solve() <= 20 && sum.LeftOperand <> 0 && sum.RightOperand <> 0)
         |> shuffle
         |> List.take 3
     
