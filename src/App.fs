@@ -13,53 +13,76 @@ type Expr =
         match this with
         | SUM (left, right) -> left + right
         | SUB (left, right) -> left - right
+    
+    member this.LeftOperand =
+        match this with
+        | SUM (left, _)
+        | SUB (left, _) -> left
+    
+    member this.RightOperand =
+        match this with
+        | SUM (_, right)
+        | SUB (_, right) -> right
 
-type SolvedExpr =
-    { Expr: Expr
+
+type Question =
+    | SolveExpr of Expr
+    
+    member this.Solve () =
+        match this with
+        | SolveExpr expr -> expr.Solve ()
+
+type QuestionAndAnswer =
+    { Question: Question
       Solution: int }
     
     member this.IsCorrect () =
-        this.Expr.Solve () = this.Solution
+        this.Question.Solve () = this.Solution
 
-let rnd =
-    Random()
+let ``sums up to`` (max: int) =
+    [ for x in 0 .. max do
+          for y in 0 .. max do
+              SUM (x, y) ]
 
-let generateNumberBetween x y =
-    rnd.Next (x, y)    
+let ``subs up to`` (max: int) =
+    [ for x in 0 .. max do
+          for y in 0 .. max do
+              SUB (x, y) ]
 
-let generateSumUpto x =
-    let left = generateNumberBetween 1 x
-    let right = generateNumberBetween 1 (x - left)
-    SUM (left, right)
+let shuffle (xs: 'a list) = List.sortBy (fun _ -> Random().Next(0,100)) xs
 
-let generateSubUpto x =
-    let left = generateNumberBetween 1 x
-    let right = generateNumberBetween 1 left
-    SUB (left, right)
-
-let generateExprsUpto x =
-    seq {
-        while true do
-          yield generateSubUpto x
-          yield generateSumUpto x  
-    }
-    |> Seq.distinct
-    |> Seq.truncate 11
+let generateQuestions () =
+    let subs =
+        ``subs up to`` 20
+        |> List.filter (fun sub -> sub.LeftOperand > 10 && sub.RightOperand <> 0 && sub.Solve () > 0 )
+        |> shuffle
+        |> List.take 8
+    
+    let sums =
+        ``sums up to`` 20
+        |> List.filter (fun sum -> sum.Solve() > 10 && sum.LeftOperand <> 0 && sum.RightOperand <> 0)
+        |> shuffle
+        |> List.take 3
+    
+    [subs; sums]
+    |> List.concat
+    |> List.map Question.SolveExpr
+    |> shuffle
 
 type StartedState =
-    { Solved: SolvedExpr list
-      Active: Expr
-      Todo: Expr list }
+    { Solved: QuestionAndAnswer list
+      Active: Question
+      Todo: Question list }
 
 type GameState =
     | NotStarted
     | Started of StartedState
 
 let startNewGame () =
-    let exprs = generateExprsUpto 10
+    let questions = generateQuestions ()
     { Solved = []
-      Active = Seq.head exprs
-      Todo = List.ofSeq (Seq.tail exprs) }
+      Active = Seq.head questions
+      Todo = List.ofSeq (Seq.tail questions) }
 
 let submitInput (input: int) (x: StartedState) =
     let nxt =
@@ -67,7 +90,7 @@ let submitInput (input: int) (x: StartedState) =
         |> List.tryHead
         |> Option.defaultValue x.Active
     
-    { x with Solved = { Expr = x.Active; Solution = input } :: x.Solved
+    { x with Solved = { Question = x.Active; Solution = input } :: x.Solved
              Active = nxt
              Todo = List.tail x.Todo }
 
@@ -81,33 +104,38 @@ let MatchComponent() =
     )
     
     let gameState, setGameState = Hook.useState(GameState.NotStarted)
-
+    
+    let answer (expected: int) (actual: int) =
+        if expected = actual then
+            html $"""<span>{expected}</span>"""
+        else
+            html $"""
+                <span style="color:red;text-decoration:line-through" class="font-bold">
+                    <span style="color:black">&nbsp;{actual}</span>
+                </span>
+                <span style="color:red;">&nbsp;{expected}</span>"""
+        
+    
     let history (startedState: StartedState) =
         let lis =
             [ for solvedExpr in startedState.Solved do
                   let left, operand, right =
-                      match solvedExpr.Expr with
-                      | Expr.SUB (left, right) -> left, "-", right
-                      | Expr.SUM (left, right) -> left, "+", right
-                  
+                      match solvedExpr.Question with
+                      | SolveExpr (Expr.SUB (left, right)) ->
+                          (string left), "-", (string right)
+                      | SolveExpr (Expr.SUM (left, right)) -> (string left), "+", (string right)
+
                   let prefix =
                       if solvedExpr.IsCorrect () then
                           "🟩"
                       else
                           "🟥"
                   
-                  let solution =
-                      if solvedExpr.IsCorrect () then
-                          html $"""<span>{solvedExpr.Solution}</span>"""
-                      else
-                          html $"""
-                            <span style="color:red;text-decoration:line-through" class="font-bold">
-                                <span style="color:black">&nbsp;{solvedExpr.Solution}</span>
-                            </span>
-                            <span style="color:red;">&nbsp;{solvedExpr.Expr.Solve()}</span>"""
-                   
-                    
-                  html $"""<li class="font-mono text-xl">{prefix} {left} {operand} {right} = {solution}""" ]
+                  let solution = answer (solvedExpr.Question.Solve ()) solvedExpr.Solution
+                  
+                  match solvedExpr.Question with
+                  | SolveExpr _ ->
+                      html $"""<li class="font-mono text-xl">{prefix} {left} {operand} {right} = {solution}""" ]
         
         html $"""<ul>{lis}</ul>"""
     
@@ -155,9 +183,11 @@ let MatchComponent() =
     | GameState.Started startedState ->
         let currentExpr =
             match startedState.Active with
-            | Expr.SUM (left, right) -> html $"""<span class="font-mono text-6xl">{left} + {right}</span>"""
-            | Expr.SUB (left, right) -> html $"""<span class="font-mono text-6xl">{left} - {right}</span>"""
-        
+            | SolveExpr (Expr.SUM (left, right)) ->
+                html $"""<span class="font-mono text-6xl">{left} + {right}</span>"""
+            | SolveExpr (Expr.SUB (left, right)) ->
+                html $"""<span class="font-mono text-6xl">{left} - {right}</span>"""
+
         let keyboard =
             let inline submit (x: int) =
                 Ev(fun ev ->
@@ -165,7 +195,7 @@ let MatchComponent() =
                     setGameState (startedState |> submitInput x |> Started)
                 )
             
-            [ for x in 0 .. 10 do
+            [ for x in 0 .. 20 do
                 html $"""
                     <div class="w-14 px-1 mb-2">
                         <button
